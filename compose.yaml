@@ -1,0 +1,45 @@
+name: dcco-researchhub
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dcco_researchhub
+      POSTGRES_USER: dcco
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 20s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://dcco:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}@db:5432/dcco_researchhub
+      SESSION_PASSWORD: ${SESSION_PASSWORD:?Defina SESSION_PASSWORD en .env}
+      OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
+      COOKIE_SECURE: "false"
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    stop_grace_period: 20s
+
+volumes:
+  postgres_data:

@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("USER")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  articles     Article[]
+  reviews      ArticleReview[]
+  annotations  ResearchArticleAnnotation[]
+}
+
+model Article {
+  id             String   @id @default(cuid())
+  articleNumber  String   @unique
+  title          String
+  doi            String?  @unique
+  abstract       String
+  searchText     String
+  articleUrl     String
+  publicationYear Int
+  status         String   @default("DRAFT")
+  createdById    String
+  createdBy      User     @relation(fields: [createdById], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  authors        ArticleAuthor[]
+  classifications ArticleClassification[]
+  reviews        ArticleReview[]
+
+  @@index([status, createdAt])
+  @@index([createdById, status])
+}
+
+// kind: LABORATORY o RESEARCH_LINE
+model Classification {
+  id          String  @id @default(cuid())
+  kind        String
+  code        String
+  name        String
+  description String  @default("")
+  isActive    Boolean @default(true)
+  articles    ArticleClassification[]
+
+  @@unique([kind, code])
+}
+
+model Author {
+  id       String          @id @default(cuid())
+  fullName String          @unique
+  articles ArticleAuthor[]
+}
+
+model ArticleAuthor {
+  articleId String
+  authorId  String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author    Author  @relation(fields: [authorId], references: [id])
+
+  @@id([articleId, authorId])
+}
+
+model ArticleClassification {
+  articleId        String
+  classificationId String
+  article          Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  classification   Classification @relation(fields: [classificationId], references: [id])
+
+  @@id([articleId, classificationId])
+  @@index([classificationId])
+}
+
+model ArticleReview {
+  id           String   @id @default(cuid())
+  articleId    String
+  reviewedById String
+  decision     String
+  comment      String?
+  createdAt    DateTime @default(now())
+  article      Article  @relation(fields: [articleId], references: [id])
+  reviewedBy   User     @relation(fields: [reviewedById], references: [id])
+
+  @@index([articleId, createdAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  succeeded Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, ip, createdAt])
+}
+
+model ArticleSequence {
+  year  Int @id
+  value Int @default(0)
+}
+
+// Clasificación interna opcional de publicaciones recuperadas de APIs externas.
+model ResearchArticleAnnotation {
+  articleKey    String   @id
+  researchLine  String?
+  laboratory    String?
+  updatedById   String
+  updatedBy     User     @relation(fields: [updatedById], references: [id])
+  updatedAt     DateTime @updatedAt
+}
