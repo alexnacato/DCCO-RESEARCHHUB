@@ -2,12 +2,12 @@ name: dcco-researchhub
 
 services:
   db:
-    image: postgres:17-alpine
+    image: public.ecr.aws/docker/library/postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: dcco_researchhub
       POSTGRES_USER: dcco
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dcco_demo_local_2026}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,8 +26,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://dcco:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}@db:5432/dcco_researchhub
-      SESSION_PASSWORD: ${SESSION_PASSWORD:?Defina SESSION_PASSWORD en .env}
+      DATABASE_URL: postgresql://dcco:${POSTGRES_PASSWORD:-dcco_demo_local_2026}@db:5432/dcco_researchhub
+      SESSION_PASSWORD: ${SESSION_PASSWORD:-dcco-demo-local-session-password-2026-1234}
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       COOKIE_SECURE: "false"
       NODE_ENV: production

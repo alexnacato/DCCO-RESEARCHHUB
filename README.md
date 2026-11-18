@@ -4,24 +4,21 @@ Buscador interno de publicaciones relacionadas con una idea de investigación. C
 
 ## Iniciar el sistema
 
-Se necesita Docker Desktop con Compose. Desde la carpeta del proyecto:
+Se necesita Docker con Compose. En esta carpeta, ejecute un solo comando:
 
-```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-# Edite .env y cambie SESSION_PASSWORD y POSTGRES_PASSWORD.
-docker compose up --build -d
-docker compose ps
+```text
+docker compose up
 ```
 
-Abra <http://localhost:3000>. Al iniciar, Compose levanta PostgreSQL, aplica las migraciones y crea las cuentas de prueba si todavía no existen. Los datos se conservan en el volumen `postgres_data`.
+Abra <http://localhost:3000> cuando la aplicación esté lista. Compose descarga las imágenes base, compila la aplicación, inicia PostgreSQL, aplica las migraciones y crea las cuentas de prueba si todavía no existen. Los datos se conservan en el volumen `postgres_data`. No hace falta crear `.env`; el primer arranque necesita conexión a internet.
 
 | Variable en `.env` | Uso |
 | --- | --- |
-| `SESSION_PASSWORD` | Clave de la sesión; use una cadena aleatoria de al menos 32 caracteres. |
+| `SESSION_PASSWORD` | Clave opcional de la sesión; use una cadena aleatoria de al menos 32 caracteres si la cambia. |
 | `POSTGRES_PASSWORD` | Contraseña de PostgreSQL. |
 | `OPENALEX_API_KEY` | Clave opcional para ampliar el presupuesto de consultas a OpenAlex. |
 
-El archivo `.env` está excluido de Git. La clave de OpenAlex se utiliza en el servidor y no se entrega al navegador. OpenAIRE se consulta sin clave. Compose publica la aplicación solo en `localhost` y configura la cookie sin el atributo `Secure`; para servirla por HTTPS hay que cambiar `COOKIE_SECURE` a `true` en `compose.yaml`.
+Si desea cambiar los valores predeterminados, copie `.env.example` a `.env` y edítelo. Para `POSTGRES_PASSWORD`, use letras, números, guiones o guiones bajos: Compose la inserta en una URL de conexión. El archivo `.env` está excluido de Git. La clave de OpenAlex se utiliza en el servidor y no se entrega al navegador. OpenAIRE se consulta sin clave. Compose publica la aplicación solo en `localhost` y configura la cookie sin el atributo `Secure`; para servirla por HTTPS hay que cambiar `COOKIE_SECURE` a `true` en `compose.yaml`.
 
 ## Credenciales de ingreso local
 
